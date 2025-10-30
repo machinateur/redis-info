@@ -1,0 +1,138 @@
+<?php
+/*
+ * MIT License
+ *
+ * Copyright (c) 2025 machinateur
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in all
+ * copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
+ */
+
+declare(strict_types=1);
+
+namespace Machinateur\RedisInfo\Template;
+
+use Machinateur\RedisInfo\Client\RedisInfoClient;
+use Machinateur\RedisInfo\Client\RedisInfoClientPool;
+use Machinateur\RedisInfo\Model\RedisInfoResult;
+use Machinateur\RedisInfo\Model\RedisInfoResultDatabase;
+use Machinateur\RedisInfo\Service\DateIntervalFormatter;
+
+\assert($pool instanceof RedisInfoClientPool);
+$pool = $pool->getPool();
+
+/** @var RedisInfoResult[] $pool */
+?>
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+
+    <title>Redis Info</title>
+
+    <style>
+        <?= \file_get_contents(__DIR__ . \DIRECTORY_SEPARATOR . '..' . \DIRECTORY_SEPARATOR . 'assets' . \DIRECTORY_SEPARATOR . 'style.css'); ?>
+    </style>
+    <script type="text/javascript">
+        <?= \file_get_contents(__DIR__ . \DIRECTORY_SEPARATOR . '..' . \DIRECTORY_SEPARATOR . 'assets' . \DIRECTORY_SEPARATOR . 'jquery.js'); ?>
+    </script>
+
+    <script type="text/javascript">
+        // TODO: Make interval configurable.
+        setInterval(function () {
+            $('#container').load(`${window.location.href} #container`);
+        }, 1000);
+    </script>
+</head>
+<body>
+
+<div id="container">
+    <h3>Redis Info</h3>
+    <? foreach ($pool as $client): ?>
+        <?
+        \assert($client instanceof RedisInfoClient);
+        $status = $client->getStatus();
+
+        $server = $client->server;
+        ?>
+
+        <? if ( ! isset($status->error)): ?>
+            <div class="success">
+                <?= $server->label ?>
+
+                <span>Host:</span> <?= $server->host ?>
+                <span>Port:</span> <?= $server->port ?>
+
+                <div class="right">Online</div>
+            </div>
+
+            <ul>
+                <li>
+                    <span>Version:</span> <?= $status->redis_version ?>, <?= $status->arch_bits ?>bit
+                    <span>Role:</span> <?= $status->role ?>
+                    <span>VM enabled:</span> <?= $status->vm_enabled ?>
+                </li>
+                <li>
+                    <span>Uptime:</span> <?= isset($status->uptime_in_seconds) ? (new DateIntervalFormatter())->format((int)$status->uptime_in_seconds) : '-'; ?>
+                    <span>Used Memory:</span> <?= $status->used_memory_human ?>
+                </li>
+                <li>
+                    <span>Connected clients:</span> <?= $status->connected_clients ?>
+                    <span>Connected slaves:</span> <?= $status->connected_slaves ?>
+                    <span>Blocked:</span> <?= $status->blocked_clients ?>
+                </li>
+                <li>
+                    <span>Connections received:</span> <?= $status->total_connections_received ?>
+                    <span>Commands processed:</span> <?= $status->total_commands_processed ?>
+                </li>
+                <li><span>Pubsub channels:</span>  <?= $status->pubsub_channels ?>
+                    <span>Pubsub patterns:</span>  <?= $status->pubsub_patterns ?>
+                </li>
+            </ul>
+
+            <? foreach ($status->database as $index => $keyspace): ?>
+                <? \assert($keyspace instanceof RedisInfoResultDatabase); ?>
+                <ul>
+                    <li>
+                        <span>Keys:</span> <?= $keyspace->keys ?>
+                        <span>Will expire:</span> <?= $keyspace->expires ?>
+
+                        <div class="right"><?= $keyspace->name ?></div>
+                    </li>
+                </ul>
+            <? endforeach; ?>
+        <? else: ?>
+            <div class="error">
+                <?= $server->label ?>
+
+                <span>Host:</span> <?= $server->host ?>
+                <span>Port:</span> <?= $server->port ?>
+
+                <div class="right">Offline</div>
+            </div>
+
+            <ul>
+                <li><?= $status->error instanceof \Throwable ? $status->error->getMessage() : $status->error; ?></li>
+            </ul>
+        <? endif; ?>
+    <? endforeach; ?>
+</div>
+
+</body>
+</html>

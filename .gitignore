@@ -1,0 +1,7 @@
+/.idea/
+
+/vendor/
+composer.lock
+box.json
+
+redis-info-history.sqlite

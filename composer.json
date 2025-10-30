@@ -1,0 +1,43 @@
+{
+    "name": "machinateur/redis-info",
+    "description": "Pure PHP, self-contained Redis monitoring tool.",
+    "type": "project",
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "machinateur",
+            "email": "hello@machinateur.dev"
+        }
+    ],
+    "minimum-stability": "stable",
+    "require": {
+        "php": "^8.2",
+        "ext-json": "*",
+        "ext-pcntl": "*",
+        "ext-sqlite3": "*",
+        "league/route": "^6.0",
+        "monolog/monolog": "^3.9",
+        "nyholm/dsn": "^2.0",
+        "psr/http-message": "^1.1",
+        "react/event-loop": "^1.5",
+        "react/http": "^1.11",
+        "react/promise": "^3.3",
+        "react/socket": "^1.16",
+        "react/stream": "^1.4",
+        "symfony/console": "^7.3",
+        "symfony/event-dispatcher": "^7.3",
+        "symfony/runtime": "^7.3",
+        "tsufeki/react-line-stream": "^0.2.1"
+    },
+    "autoload": {
+        "psr-4": {
+            "Machinateur\\RedisInfo\\": "./src"
+        }
+    },
+    "config": {
+        "sort-packages": true,
+        "allow-plugins": {
+            "symfony/runtime": true
+        }
+    }
+}
